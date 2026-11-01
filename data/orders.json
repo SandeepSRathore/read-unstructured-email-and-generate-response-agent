@@ -1,0 +1,65 @@
+[
+  {
+    "order_id": "A1001",
+    "customer_email": "maria.gonzalez@example.com",
+    "customer_name": "Maria Gonzalez",
+    "placed_at": "2026-10-24",
+    "status": "shipped",
+    "shipping_method": "standard",
+    "shipped_at": "2026-10-27",
+    "delivered_at": null,
+    "carrier": "UPS",
+    "tracking_number": "1Z999AA10123456784",
+    "items": [{"sku": "LMP-220", "name": "Arc Floor Lamp (Brass)", "qty": 1, "price": 129.00, "final_sale": false}],
+    "total": 129.00,
+    "currency": "USD"
+  },
+  {
+    "order_id": "A1002",
+    "customer_email": "james.okafor@example.com",
+    "customer_name": "James Okafor",
+    "placed_at": "2026-10-05",
+    "status": "delivered",
+    "shipping_method": "express",
+    "shipped_at": "2026-10-06",
+    "delivered_at": "2026-10-08",
+    "carrier": "FedEx",
+    "tracking_number": "794644790138",
+    "items": [
+      {"sku": "TBL-410", "name": "Oak Side Table", "qty": 1, "price": 89.00, "final_sale": false},
+      {"sku": "CSH-105", "name": "Linen Throw Pillow (Sage)", "qty": 2, "price": 24.00, "final_sale": true}
+    ],
+    "total": 152.99,
+    "currency": "USD"
+  },
+  {
+    "order_id": "A1003",
+    "customer_email": "priya.shah@example.com",
+    "customer_name": "Priya Shah",
+    "placed_at": "2026-10-20",
+    "status": "delivered",
+    "shipping_method": "standard",
+    "shipped_at": "2026-10-21",
+    "delivered_at": "2026-10-28",
+    "carrier": "USPS",
+    "tracking_number": "9400111899223344556677",
+    "items": [{"sku": "DIN-800", "name": "Walnut Dining Table (6-seat)", "qty": 1, "price": 649.00, "final_sale": false}],
+    "total": 649.00,
+    "currency": "USD"
+  },
+  {
+    "order_id": "A1004",
+    "customer_email": "tom.becker@example.com",
+    "customer_name": "Tom Becker",
+    "placed_at": "2026-11-01",
+    "status": "processing",
+    "shipping_method": "standard",
+    "shipped_at": null,
+    "delivered_at": null,
+    "carrier": null,
+    "tracking_number": null,
+    "items": [{"sku": "RUG-300", "name": "Wool Area Rug 5x8 (Charcoal)", "qty": 1, "price": 219.00, "final_sale": false}],
+    "total": 219.00,
+    "currency": "USD"
+  }
+]
