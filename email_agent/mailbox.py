@@ -17,7 +17,7 @@ import urllib.request
 from datetime import datetime, timezone
 from email import message_from_bytes, policy
 from email.message import EmailMessage
-from email.utils import formatdate, make_msgid, parseaddr
+from email.utils import formataddr, formatdate, make_msgid, getaddresses, parseaddr
 from html import unescape
 from pathlib import Path
 from typing import Any, Protocol
@@ -71,10 +71,28 @@ def parse_email(raw: bytes, source_ref: str = "") -> InboundEmail:
     )
 
 
+def _clean_display_name(name: str) -> str:
+    return re.sub(r"[\r\n<>,;@\"]", " ", name).strip()
+
+
+def reply_recipients(reply: EmailMessage, email: InboundEmail) -> list[str]:
+    """Exactly one envelope recipient: the address the order lookups were scoped to.
+
+    For replies approved from review/ (no original sender at hand), use the single To address.
+    """
+    if email.sender_email:
+        return [email.sender_email]
+    addrs = [a for _, a in getaddresses([str(reply.get("To", ""))]) if a]
+    if len(addrs) != 1:
+        raise ValueError(f"Refusing to send: reply must have exactly one recipient, found {addrs}")
+    return addrs
+
+
 def build_reply(email: InboundEmail, draft: DraftReply, settings: Settings) -> EmailMessage:
     reply = EmailMessage()
     reply["From"] = f"{settings.company_name} Support <{settings.support_address}>"
-    reply["To"] = f"{email.sender_name} <{email.sender_email}>" if email.sender_name else email.sender_email
+    # Build the address structurally: the display name is quoted, so it can never add recipients.
+    reply["To"] = formataddr((_clean_display_name(email.sender_name), email.sender_email))
     subject = draft.subject.strip() or f"Re: {email.subject}"
     reply["Subject"] = subject
     reply["Date"] = formatdate(localtime=True)
@@ -182,7 +200,7 @@ class MailpitMailbox:
 
     def send(self, reply: EmailMessage, email: InboundEmail) -> None:
         with smtplib.SMTP(self.s.mailpit_smtp_host, self.s.mailpit_smtp_port) as server:
-            server.send_message(reply)
+            server.send_message(reply, to_addrs=reply_recipients(reply, email))
         if email.source_ref:
             self._tags[email.source_ref] = "auto-replied"
 
@@ -240,7 +258,7 @@ class ImapSmtpMailbox:
             server.starttls()
         with server:
             server.login(self.s.smtp_user, self.s.smtp_password)
-            server.send_message(reply)
+            server.send_message(reply, to_addrs=reply_recipients(reply, email))
 
     def flag_for_review(self, email: InboundEmail) -> None:
         folder = self.s.imap_review_folder

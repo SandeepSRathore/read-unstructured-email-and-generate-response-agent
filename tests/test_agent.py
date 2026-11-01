@@ -355,3 +355,32 @@ def test_add_business_days_skips_weekends(store):
     assert json.loads(out)["result_date"] == "2026-11-02 (Monday)"
     _, err = ex.run("add_business_days", {"start_date": "2026-10-30", "business_days": 999})
     assert err
+
+
+def test_crafted_display_name_cannot_add_recipients(settings):
+    from email.utils import getaddresses
+
+    from email_agent.mailbox import build_reply, reply_recipients
+
+    raw = b'From: "Bob, victim@other.com" <attacker@example.com>\nSubject: hi\nMessage-ID: <m1@x>\n\nhello'
+    e = parse_email(raw)
+    reply = build_reply(e, draft(), settings)
+    assert [a for _, a in getaddresses([str(reply["To"])])] == ["attacker@example.com"]
+    assert reply_recipients(reply, e) == ["attacker@example.com"]
+
+
+def test_malformed_sender_is_skipped(settings):
+    e = InboundEmail(message_id="<x>", sender_email="a@b.com,c@d.com", sender_name="", subject="", body="")
+    assert "malformed" in should_skip(e, settings)
+
+
+def test_approved_reply_must_have_exactly_one_recipient():
+    from email.message import EmailMessage
+
+    from email_agent.mailbox import reply_recipients
+
+    reply = EmailMessage()
+    reply["To"] = "a@b.com, c@d.com"
+    blank = InboundEmail(message_id="<x>", sender_email="", sender_name="", subject="", body="")
+    with pytest.raises(ValueError, match="exactly one recipient"):
+        reply_recipients(reply, blank)

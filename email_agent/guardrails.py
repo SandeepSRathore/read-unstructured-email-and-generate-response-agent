@@ -11,6 +11,8 @@ from .config import Settings
 from .schemas import Decision, DraftReply, ExtractedDetails, InboundEmail, Verification
 
 _NO_REPLY_SENDER = re.compile(r"(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce)", re.IGNORECASE)
+# One plain address: no spaces, commas, angle brackets or quotes that could smuggle extra recipients.
+_VALID_ADDRESS = re.compile(r"[^@\s<>,;\"]+@[^@\s<>,;\"]+\.[^@\s<>,;\"]+")
 
 # Intents where the customer needs something *done* (money moved, order changed). The agent can
 # explain policy and next steps, but a person must perform the action, so these never auto-send.
@@ -26,6 +28,8 @@ def should_skip(email: InboundEmail, settings: Settings) -> str | None:
     h = {k.lower(): v for k, v in email.headers.items()}
     if not email.sender_email:
         return "no sender address"
+    if not _VALID_ADDRESS.fullmatch(email.sender_email):
+        return f"malformed sender address ({email.sender_email!r})"
     if email.sender_email.lower() == settings.support_address.lower():
         return "sent from our own support address (loop guard)"
     if _NO_REPLY_SENDER.search(email.sender_email):
